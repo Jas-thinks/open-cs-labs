@@ -21,8 +21,19 @@ frontend arrive in M1. See `STATUS.md` and `docs/ADRs/`.
 
 ## Local development setup (verified)
 
-Prerequisites: Git, Node.js 22 (or any version satisfying `engines.node`), pnpm, Python 3.12.
-Install [uv](https://docs.astral.sh/uv/) first if it is missing:
+Prerequisites: Git, Node.js 22, Python 3.12, and [uv](https://docs.astral.sh/uv/).
+
+Node 22 ships `corepack` but **not** `pnpm`. Enable the pinned version once (`packageManager`
+in `package.json` is `pnpm@9.15.0`), or call it through corepack without enabling shims:
+
+```bash
+nvm use             # reads .nvmrc -> Node 22.23.1
+corepack enable     # one-time; provides `pnpm` at the pinned version
+# or, without enabling shims:
+corepack pnpm --version   # verified: prints 9.15.0
+```
+
+Install uv if it is missing:
 
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
@@ -46,6 +57,9 @@ pnpm run format:check
 These commands were executed during M0 and produced exit code 0. CI runs the same checks
 (`.github/workflows/ci.yml`); the workflow itself is unverified until this repository is
 pushed to a remote.
+
+> Workspace note: `pnpm run lint|typecheck|test|build` recurse over workspace packages. There
+> are none until `apps/web` lands in M1, so those scripts are currently no-ops.
 
 > Troubleshooting: if `pnpm install` reports that devDependencies were skipped, the shell
 > has `NODE_ENV=production` set. Run `NODE_ENV=development pnpm install --frozen-lockfile`.

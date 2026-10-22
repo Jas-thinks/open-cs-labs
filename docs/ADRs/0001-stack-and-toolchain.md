@@ -34,9 +34,11 @@ Captured by running the commands shown; these are measured values, not estimates
 | Git | 2.43.0 | `git --version` |
 | Docker | 29.9.1 (build dfc520d) | `docker --version` |
 | Docker Compose | v2.40.3-desktop.1 | `docker compose version` |
+| uv | 0.13.5 | `uv --version` |
 
-Also present: `java`. Not installed: `uv` (added in M0), `psql` / local PostgreSQL,
-`go`, `yarn`, `bun`. PostgreSQL will run via Docker Compose from M1.
+Also present: `java`. Not installed: `psql` / local PostgreSQL, `go`, `yarn`, `bun`.
+PostgreSQL will run via Docker Compose from M1. `uv` was installed during M0 at version
+**0.13.5**, and CI pins the same version so local and CI cannot drift.
 
 ## Options considered
 
@@ -77,8 +79,9 @@ benefit here); npm (pnpm is already installed and workspace-friendly).
 - CI installs Node from `.nvmrc` and Python via `uv python install 3.12`.
 - Local development uses Node 22; the machine's default Node 25 also satisfies
   `engines.node >=22.23.1`, but CI is authoritative.
-- `uv` is not present on the current machine and must be installed
-  (`curl -LsSf https://astral.sh/uv/install.sh | sh` or an equivalent verified method).
+- `uv` was not present before M0; it is installed at version **0.13.5**
+  (`curl -LsSf https://astral.sh/uv/install.sh | sh`). CI pins the same version via
+  `astral-sh/setup-uv` so local and CI cannot drift.
 - Adding runtime dependencies requires updating `uv.lock` and citing the reason
   (`RULES.md` section 8).
 

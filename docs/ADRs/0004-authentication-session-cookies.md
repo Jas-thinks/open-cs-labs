@@ -36,16 +36,23 @@ No benchmark. This is a security/architecture decision; no measured trade-off ap
 ## Decision
 
 Use a server-managed session with a `Secure`, `HttpOnly` cookie in production, plus
-CSRF protection, correct `SameSite` configuration, and HTTPS. Bearer tokens are **not**
-used for the first release; a future switch requires a superseding ADR documenting token
-storage and rotation.
+CSRF protection, correct `SameSite` configuration, and HTTPS. Sessions are persisted in a
+**PostgreSQL `sessions` table**, and CSRF uses a **double-submit cookie** (a non-`HttpOnly`
+cookie carrying a random token that the client echoes in a request header, validated
+server-side). Bearer tokens are **not** used for the first release; a future switch requires
+a superseding ADR documenting token storage and rotation.
 
-Not chosen: bearer JWT in `localStorage` (explicitly prohibited by `API_CONTRACTS.md`).
+Not chosen: bearer JWT in `localStorage` (explicitly prohibited by `API_CONTRACTS.md`);
+Redis-backed sessions (Redis stays unadopted until an ADR names a purpose).
 
 ## Consequences
 
-- Session persistence must be chosen in M1 (PostgreSQL `sessions` table initially;
-  Redis only if a later ADR names a purpose).
+- Session persistence: a **PostgreSQL `sessions` table** — server-side revocable and covered
+  by the existing database backup/restore (ADR-0002, ADR-0007). Redis is **not** used for
+  sessions; it remains unadopted until an ADR names a purpose.
+- CSRF: **double-submit cookie** — a non-`HttpOnly`, `SameSite`-scoped cookie holds a random
+  token that the client echoes in a request header; the server rejects the request when the
+  header and cookie disagree. Token rotation and per-session binding are defined in M1.
 - `SECRET_KEY`, `SESSION_COOKIE_SECURE`, and `CORS_ORIGINS` are required configuration
   (already listed as placeholders in `.env.example`).
 - WebSocket connections authenticate with the session cookie and enforce origin checks.
