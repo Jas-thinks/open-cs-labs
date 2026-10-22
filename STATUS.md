@@ -27,8 +27,13 @@ Recorded as ADRs in `docs/ADRs/`:
 
 ## Open items / risks
 
-- CI host assumed to be GitHub Actions; the repository has no remote yet, so the workflow is unverified until pushed.
-- Exact patch versions of some tools were captured in ADR-0001; re-verify when the environment changes.
+- CI is GitHub Actions and green on `main` (run `39743425740`). Two non-blocking warnings
+  remain: the third-party actions target Node 20 (deprecated on runners) and `ubuntu-latest`
+  will migrate to Ubuntu 26 in October 2026. Bumping action versions is a small follow-up.
+- Exact patch versions of some tools were captured in ADR-0001; re-verify when the
+  environment changes.
+- `uv` is installed outside the repository (`~/.local/bin`). CI pins 0.13.5; a developer must
+  install it separately.
 
 ## M0 evidence
 
@@ -53,5 +58,20 @@ Commands run and observed results:
 | `git check-ignore -v .env` | matched `.gitignore:25:.env` (env files ignored) |
 | `git add -An apps/` | stages only the 6 intended files; `.venv/` and `.ruff_cache/` excluded |
 
-Not verified: the GitHub Actions workflow has not run — the repository has no remote yet.
-Do not report CI as passing until it is observed.
+### M0 closeout
+
+Remote: `https://github.com/Jas-thinks/open-cs-labs` (public). `main` tracks `origin/main`.
+
+| Check | Command | Result |
+| --- | --- | --- |
+| CI on `4e5af5b` | `gh run view 39743425740` | **success** — `Backend (lint, types, tests)` and `Workspace (format check)` both green; all steps completed |
+| pnpm under Node 22 | `corepack pnpm --version` | `9.15.0` (exit 0) — documents the README fix |
+| `.commandcode/` ignored | `git check-ignore -v .commandcode/taste/taste.md` | matched `.gitignore:30:.commandcode/` |
+| Backend re-verified | `uv lock --check` / `ruff check` / `ruff format --check` / `mypy` / `pytest -q` | lock current; all checks pass |
+| Workspace re-verified | `pnpm exec prettier --check "**/*.{json,yml,yaml}"` | conforms |
+
+CI run: https://github.com/Jas-thinks/open-cs-labs/actions/runs/39743425740
+
+Not verified / deferred: Docker Compose and any application behavior (there is still no
+application code). Judge, RAG provider, and deployment topology remain open decisions
+(ADR-0005/0006/0007).
